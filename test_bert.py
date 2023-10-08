@@ -19,6 +19,7 @@ skip_exec = False
 task_name = 'mnli'
 
 bert_base_uncased_path =  "C:/Users/wangbt/.cache/huggingface/hub/models--bert-base-uncased"
+glue_path = "C:/Users/wangbt/.cache/huggingface/metrics/glue/mnli/glue.py"
 
 def build_model(pretrained_model_name_or_path: str, task_name: str):
     is_regression = task_name == 'stsb'
@@ -56,7 +57,7 @@ def prepare_datasets(task_name: str, tokenizer: BertTokenizerFast, cache_dir: st
             result['labels'] = examples['label']
         return result
 
-    raw_datasets = load_dataset('glue', task_name, cache_dir=cache_dir)
+    raw_datasets = load_dataset(glue_path, task_name, cache_dir=cache_dir)
     for key in list(raw_datasets.keys()):
         if 'test' in key:
             raw_datasets.pop(key)
@@ -81,7 +82,7 @@ def prepare_datasets(task_name: str, tokenizer: BertTokenizerFast, cache_dir: st
 def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
     is_regression = task_name == 'stsb'
 
-    # metric = load_metric('glue', task_name)
+    metric = load_metric('glue', task_name)
 
     def compute_metrics(p: EvalPrediction):
         preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
@@ -91,8 +92,7 @@ def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
         return result
     tokenizer = BertTokenizerFast.from_pretrained(bert_base_uncased_path)
 
-    import pdb 
-    pdb.set_trace()
+
     # b E:\0code\test\test_bert.py:59 
     # b c:\users\wangbt\.conda\envs\compress\lib\site-packages\datasets\load.py:1453
     train_dataset, validation_datasets = prepare_datasets(task_name, tokenizer, None)
