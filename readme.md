@@ -1,3 +1,5 @@
+解决request访问权限问题    
+
 urllib3 (1.26.16) or chardet (5.2.0)  不行   
 
 windows 
