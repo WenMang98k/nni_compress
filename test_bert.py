@@ -18,11 +18,13 @@ skip_exec = False
 
 task_name = 'mnli'
 
+bert_base_uncased_path =  "C:/Users/wangbt/.cache/huggingface/hub/models--bert-base-uncased"
+
 def build_model(pretrained_model_name_or_path: str, task_name: str):
     is_regression = task_name == 'stsb'
     num_labels = 1 if is_regression else (3 if task_name == 'mnli' else 2)
     if pretrained_model_name_or_path == "bert-base-uncased":
-        pretrained_model_name_or_path = "C:/Users/wangbt/.cache/huggingface/hub/models--bert-base-uncased"
+        pretrained_model_name_or_path = bert_base_uncased_path
 
     model = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, num_labels=num_labels)
     return model
@@ -78,9 +80,8 @@ def prepare_datasets(task_name: str, tokenizer: BertTokenizerFast, cache_dir: st
 
 def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
     is_regression = task_name == 'stsb'
-    import pdb 
-    pdb.set_trace()
-    metric = load_metric('glue', task_name)
+
+    # metric = load_metric('glue', task_name)
 
     def compute_metrics(p: EvalPrediction):
         preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
@@ -88,8 +89,12 @@ def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
         result = metric.compute(predictions=preds, references=p.label_ids)
         result['default'] = result.get('f1', result.get('accuracy', 0.))
         return result
+    tokenizer = BertTokenizerFast.from_pretrained(bert_base_uncased_path)
 
-    tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+    import pdb 
+    pdb.set_trace()
+    # b E:\0code\test\test_bert.py:59 
+    # b c:\users\wangbt\.conda\envs\compress\lib\site-packages\datasets\load.py:1453
     train_dataset, validation_datasets = prepare_datasets(task_name, tokenizer, None)
     merged_validation_dataset = ConcatDataset([d for d in validation_datasets.values()])
     data_collator = DataCollatorWithPadding(tokenizer)
