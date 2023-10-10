@@ -13,6 +13,8 @@ from datasets import load_dataset, load_metric
 from transformers import BertTokenizerFast, DataCollatorWithPadding, BertForSequenceClassification, EvalPrediction
 from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
+import warnings
+warnings.filterwarnings('ignore')
 
 skip_exec = False
 
@@ -92,10 +94,10 @@ def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
         return result
     tokenizer = BertTokenizerFast.from_pretrained(bert_base_uncased_path)
 
-
+    # huggingface/datasets/downloads/extracted/5d4942da75abb580bbad68e400748ebab03db835b523ea99bd7efce0a9fd7cab/MNLI
     # b E:\0code\test\test_bert.py:59 
     # b c:\users\wangbt\.conda\envs\compress\lib\site-packages\datasets\load.py:1453
-    train_dataset, validation_datasets = prepare_datasets(task_name, tokenizer, None)
+    train_dataset, validation_datasets = prepare_datasets(task_name, tokenizer, "C:/Users/wangbt/.cache/huggingface/datasets")
     merged_validation_dataset = ConcatDataset([d for d in validation_datasets.values()])
     data_collator = DataCollatorWithPadding(tokenizer)
     training_args = TrainingArguments(output_dir='./output/trainer',
@@ -124,8 +126,6 @@ def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
     return trainer
 
 def build_finetuning_model(task_name: str, state_dict_path: str):
-    # import pdb
-    # pdb.set_trace()
     model = build_model('bert-base-uncased', task_name)
     if Path(state_dict_path).exists():
         model.load_state_dict(torch.load(state_dict_path))
@@ -136,9 +136,7 @@ def build_finetuning_model(task_name: str, state_dict_path: str):
     return model
 
 
-if not skip_exec:
-    Path('./output/bert_finetuned').mkdir(exist_ok=True, parents=True)
-    build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
+
 
 from nni.compression.distillation import DynamicLayerwiseDistiller, Adaptive1dLayerwiseDistiller
 from nni.compression.utils import TransformersEvaluator
@@ -251,8 +249,6 @@ def pruning_attn():
     torch.save(model, './output/pruning/attn_masked_model.pth')
 
 
-if not skip_exec:
-    pruning_attn()
 
 def speedup_attn():
     model = torch.load('./output/pruning/attn_masked_model.pth', map_location='cpu')
@@ -266,9 +262,6 @@ def speedup_attn():
     dynamic_distillation(model, teacher_model, None, 3)
     torch.save(model, './output/pruning/attn_pruned_model.pth')
 
-
-if not skip_exec:
-    speedup_attn()
 
 from nni.compression.pruning import TaylorPruner, AGPPruner
 from transformers.models.bert.modeling_bert import BertLayer
@@ -304,8 +297,7 @@ def pruning_ffn():
     torch.save(model, './output/pruning/ffn_masked_model.pth')
 
 
-if not skip_exec:
-    pruning_ffn()
+
 
 def speedup_ffn():
     model = torch.load('./output/pruning/ffn_masked_model.pth', map_location='cpu')
@@ -318,9 +310,6 @@ def speedup_ffn():
     dynamic_distillation(model, teacher_model, None, 3)
     torch.save(model, './output/pruning/ffn_pruned_model.pth')
 
-
-if not skip_exec:
-    speedup_ffn()
 
 from nni.compression.base.setting import PruningSetting
 
@@ -393,10 +382,6 @@ def pruning_embedding():
     torch.save(model, './output/pruning/embedding_masked_model.pth')
 
 
-if not skip_exec:
-    pruning_embedding()
-
-
 def speedup_embedding():
     model = torch.load('./output/pruning/embedding_masked_model.pth', map_location='cpu')
     masks = torch.load('./output/pruning/embedding_masks.pth', map_location='cpu')
@@ -409,8 +394,6 @@ def speedup_embedding():
     torch.save(model, './output/pruning/embedding_pruned_model.pth')
 
 
-if not skip_exec:
-    speedup_embedding()
 
 def evaluate_pruned_model():
     model: BertForSequenceClassification = torch.load('./output/pruning/embedding_pruned_model.pth')
@@ -423,6 +406,31 @@ def evaluate_pruned_model():
     print(f'Metric: {metric}\nSparsity: {1 - pruned_num_params / ori_num_params}')
 
 
-if not skip_exec:
-    evaluate_pruned_model()
+
+if __name__ == '__main__':
+    if not skip_exec:
+        Path('./output/bert_finetuned').mkdir(exist_ok=True, parents=True)
+        build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
+        
+    if not skip_exec:
+        pruning_attn()
+    
+    if not skip_exec:
+        speedup_attn()
+
+    if not skip_exec:
+        pruning_ffn()
+    
+    if not skip_exec:
+        speedup_ffn()
+    
+    if not skip_exec:
+        pruning_embedding()
+    
+    if not skip_exec:
+        speedup_embedding()
+    
+
+    if not skip_exec:
+        evaluate_pruned_model()
 

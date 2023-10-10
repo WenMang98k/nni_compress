@@ -16,6 +16,15 @@ sudo vim /etc/hosts
 > * glue: https://huggingface.co/datasets/glue/blob/main/glue.py  下载完之后，放到固定位置$glue_path，修改代码  raw_datasets = load_dataset(glue_path, task_name, cache_dir=cache_dir)
 > * mnli: https://dl.fbaipublicfiles.com/glue/data/MNLI.zip
 
-![Alt text](image.png)
+
 
 > git学习视频：https://www.bilibili.com/video/BV1r3411F7kn/
+
+
+**windows conda 环境安装**    
+* conda create -n compress python=3.8    
+* **conda安装pytoch2.1：** conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia    
+* **pip安装pytoch2.1：**  pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118    
+* 
+
+
